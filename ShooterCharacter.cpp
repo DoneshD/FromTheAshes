@@ -74,10 +74,11 @@ void AShooterCharacter::PullTrigger()
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
-
+	
+	
 	if (CanFire)
 	{
-		ReloadReady = false;
+		
 		if (ClipAmmo > 0)
 		{
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
@@ -89,23 +90,24 @@ void AShooterCharacter::PullTrigger()
 		{
 			if (ReloadReady){
 				ReloadGun();
-				
-				GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::ReloadTimeValid, ReloadTime, true);
 			}
 		}
 		else
 		{
 			TriggerOutOfAmmoPopUp();
 		}
-
+		
 		CanFire = false;
-		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::FireRatedValid, FireRate, true);
+		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
 	}
+
+	ReloadReady = false;
+	GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::ReloadTimeValid, ReloadTime, true);
+	
 }
 
 void AShooterCharacter::ReloadGun()
 {
-	
 	if (ClipAmmo != MaxClipAmmo)
 	{
 		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
@@ -157,7 +159,7 @@ float AShooterCharacter::GetHealthPercent() const
 	return Health / MaxHealth;
 }
 
-void AShooterCharacter::FireRatedValid()
+void AShooterCharacter::FireRateValid()
 {
 	CanFire = true;
 }
@@ -165,6 +167,7 @@ void AShooterCharacter::FireRatedValid()
 void AShooterCharacter::ReloadTimeValid()
 {
 	ReloadReady = true;
+
 }
 
 void AShooterCharacter::MoveForward(float AxisValue)

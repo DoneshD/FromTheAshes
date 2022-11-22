@@ -53,7 +53,7 @@ public:
 	void ReloadGun();
 
 	//For firerate
-	void FireRatedValid();
+	void FireRateValid();
 	void ReloadTimeValid();
 
 

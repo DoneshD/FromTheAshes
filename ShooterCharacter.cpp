@@ -57,7 +57,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::PullTrigger);
-	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadGun);
+	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 }
 
 void AShooterCharacter::PullTrigger()
@@ -74,11 +74,10 @@ void AShooterCharacter::PullTrigger()
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
-	
-	
+
 	if (CanFire)
 	{
-		
+
 		if (ClipAmmo > 0)
 		{
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
@@ -86,41 +85,26 @@ void AShooterCharacter::PullTrigger()
 			Projectile->SetOwner(this);
 			ClipAmmo = ClipAmmo - 1;
 		}
+
 		else if (TotalAmmo > 0)
 		{
-			if (ReloadReady){
-				ReloadGun();
-			}
+			ReloadReady = false;
+			ReloadTimeValid();
 		}
 		else
 		{
 			TriggerOutOfAmmoPopUp();
 		}
-		
-		CanFire = false;
-		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
-	}
 
-	ReloadReady = false;
-	GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::ReloadTimeValid, ReloadTime, true);
-	
+		CanFire = false;
+		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
+	}
 }
 
-void AShooterCharacter::ReloadGun()
+void AShooterCharacter::ReloadTimeValid()
 {
-	if (ClipAmmo != MaxClipAmmo)
-	{
-		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
-		{
-			TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
-			ClipAmmo = MaxClipAmmo;
-		}
-		else
-		{
-			ClipAmmo = ClipAmmo + TotalAmmo;
-			TotalAmmo = 0;
-		}
-	}
+	ReloadReady = true;
+	GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, true);
 }
 
 bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
@@ -164,10 +148,25 @@ void AShooterCharacter::FireRateValid()
 	CanFire = true;
 }
 
-void AShooterCharacter::ReloadTimeValid()
+void AShooterCharacter::ReloadGun()
 {
-	ReloadReady = true;
-
+	if (ReloadReady == true)
+	{
+		if (ClipAmmo != MaxClipAmmo && ReloadReady == true)
+		{
+			if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
+			{
+				TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
+				ClipAmmo = MaxClipAmmo;
+			}
+			else
+			{
+				ClipAmmo = ClipAmmo + TotalAmmo;
+				TotalAmmo = 0;
+			}
+		}
+	}
+	ReloadReady = false;
 }
 
 void AShooterCharacter::MoveForward(float AxisValue)

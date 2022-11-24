@@ -85,6 +85,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float FireRate = 0.2;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float ReloadTime = 2.0;
+
 public:
 	//Ammo magazines
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -98,9 +101,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	int ClipAmmo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	float ReloadTime = 2.0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float MaxHealth = 100;

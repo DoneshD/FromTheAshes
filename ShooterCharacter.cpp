@@ -90,6 +90,7 @@ void AShooterCharacter::PullTrigger()
 		{
 			ReloadReady = false;
 			ReloadTimeValid();
+			//It's not a bug, its a feature
 		}
 		else
 		{
@@ -150,20 +151,17 @@ void AShooterCharacter::FireRateValid()
 
 void AShooterCharacter::ReloadGun()
 {
-	if (ReloadReady == true)
+	if (ClipAmmo != MaxClipAmmo && ReloadReady == true)
 	{
-		if (ClipAmmo != MaxClipAmmo && ReloadReady == true)
+		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
 		{
-			if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
-			{
-				TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
-				ClipAmmo = MaxClipAmmo;
-			}
-			else
-			{
-				ClipAmmo = ClipAmmo + TotalAmmo;
-				TotalAmmo = 0;
-			}
+			TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
+			ClipAmmo = MaxClipAmmo;
+		}
+		else
+		{
+			ClipAmmo = ClipAmmo + TotalAmmo;
+			TotalAmmo = 0;
 		}
 	}
 	ReloadReady = false;

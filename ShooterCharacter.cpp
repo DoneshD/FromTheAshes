@@ -14,6 +14,8 @@
 #include "DystopianShooterGameModeBase.h"
 #include "Components/ArrowComponent.h"
 
+//Check if ready for inheritance
+
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {

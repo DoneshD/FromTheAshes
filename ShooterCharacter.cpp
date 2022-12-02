@@ -15,6 +15,7 @@
 #include "Components/ArrowComponent.h"
 
 //Check if ready for inheritance
+//YOU GOT TO WORK ON THIS!!!
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()

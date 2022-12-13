@@ -13,6 +13,7 @@
 #include "Materials/MaterialInterface.h"
 #include "DystopianShooterGameModeBase.h"
 #include "Components/ArrowComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //Check if ready for inheritance
 //YOU GOT TO WORK ON THIS!!!
@@ -58,14 +59,17 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AShooterCharacter::LookRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::LookUp);
 
+	PlayerInputComponent->BindAction(TEXT("StartSprinting"), EInputEvent::IE_Pressed, this, &AShooterCharacter::StartSprint);
+	PlayerInputComponent->BindAction(TEXT("StopSprinting"), EInputEvent::IE_Released, this, &AShooterCharacter::StopSprint);
+
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::PullTrigger);
-	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
+
+
 }
 
 void AShooterCharacter::PullTrigger()
 {
-
 	FHitResult Hit;
 	FVector ShotDirection;
 	FVector End;
@@ -188,6 +192,15 @@ void AShooterCharacter::LookUp(float AxisValue)
 void AShooterCharacter::LookRight(float AxisValue)
 {
 	AddControllerYawInput(AxisValue);
+}
+
+void AShooterCharacter::StartSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
+}
+void AShooterCharacter::StopSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 }
 
 bool AShooterCharacter::IsDead() const

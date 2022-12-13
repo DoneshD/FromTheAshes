@@ -56,6 +56,9 @@ public:
 	void FireRateValid();
 	void ReloadTimeValid();
 
+	void StartSprint();
+	void StopSprint();
+
 
 private:
 	void MoveForward(float AxisValue);
@@ -63,6 +66,8 @@ private:
 	
 	void LookUp(float AxisValue);
 	void LookRight(float AxisValue);
+
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USceneComponent* ProjectileSpawnPoint;
@@ -87,6 +92,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float ReloadTime = 2.0;
+
+	// UPROPERTY(EditAnywhere, Category = "Weapon")
+	// float Speed = 15;
+
+	
 
 public:
 	//Ammo magazines

@@ -29,10 +29,10 @@ AShooterCharacter::AShooterCharacter()
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Projectile SpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(GetMesh());
 
-	MaxTotalAmmo = 72;
-	MaxClipAmmo = 6;
-	TotalAmmo = 36;
-	ClipAmmo = 6;
+	MaxTotalAmmo = 108;
+	MaxClipAmmo = 12;
+	TotalAmmo = 72;
+	ClipAmmo = 12;
 	ReloadTime = 2;
 }
 
@@ -59,11 +59,14 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AShooterCharacter::LookRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::LookUp);
 
-	PlayerInputComponent->BindAction(TEXT("StartSprinting"), EInputEvent::IE_Pressed, this, &AShooterCharacter::StartSprint);
-	PlayerInputComponent->BindAction(TEXT("StopSprinting"), EInputEvent::IE_Released, this, &AShooterCharacter::StopSprint);
+	// Delete or translate
+	// PlayerInputComponent->BindAction(TEXT("StartSprinting"), EInputEvent::IE_Pressed, this, &AShooterCharacter::StartSprint);
+	// PlayerInputComponent->BindAction(TEXT("StopSprinting"), EInputEvent::IE_Released, this, &AShooterCharacter::StopSprint);
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::PullTrigger);
+
+	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 
 
 }

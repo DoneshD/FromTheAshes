@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "ChargedProjectile.h"
 #include "TimerManager.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -56,6 +57,9 @@ public:
 	void FireRateValid();
 	void ReloadTimeValid();
 
+	void ChargeShot();
+
+	//Not in use
 	void StartSprint();
 	void StopSprint();
 
@@ -74,6 +78,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<class AProjectile> ChargedProjectileClass;
 
 	UPROPERTY(EditAnywhere)
 	UMaterialParameterCollection* collection;

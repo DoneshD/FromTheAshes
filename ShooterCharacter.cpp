@@ -2,6 +2,7 @@
 
 #include "ShooterCharacter.h"
 #include "Projectile.h"
+#include "ChargedProjectile.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -68,8 +69,58 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 
+	PlayerInputComponent->BindAction(TEXT("ChargeShot"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ChargeShot);
+
 
 }
+
+
+void AShooterCharacter::ChargeShot()
+{
+		FHitResult Hit;
+	FVector ShotDirection;
+	FVector End;
+
+	bool bSuccess = TraceShot(Hit, ShotDirection, End);
+
+	FVector Select = UKismetMathLibrary::SelectVector(Hit.Location, End, bSuccess);
+	FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
+	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
+	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
+	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
+
+	if (CanFire)
+	{
+
+		if (ClipAmmo > 0)
+		{
+			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
+			// AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
+			// Projectile->SetOwner(this);
+			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
+			if(ChargeShot)
+				UE_LOG(LogTemp, Warning, TEXT("Charged"));
+			ChargeShot->SetOwner(this);
+			ClipAmmo = ClipAmmo - 1;
+		}
+
+		else if (TotalAmmo > 0)
+		{
+			ReloadReady = false;
+			ReloadTimeValid();
+			//It's not a bug, its a feature
+		}
+		else
+		{
+			TriggerOutOfAmmoPopUp();
+		}
+
+		CanFire = false;
+		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
+	}
+}
+}
+
 
 void AShooterCharacter::PullTrigger()
 {
@@ -93,6 +144,9 @@ void AShooterCharacter::PullTrigger()
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
+			
+			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
+			ChargeShot->SetOwner(this);
 			ClipAmmo = ClipAmmo - 1;
 		}
 

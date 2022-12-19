@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "ChargedProjectile.h"
 #include "TimerManager.h"
+#include "InputCoreTypes.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -57,11 +58,17 @@ public:
 	void FireRateValid();
 	void ReloadTimeValid();
 
+	void Charging(FKey key);
 	void ChargeShot();
 
 	//Not in use
 	void StartSprint();
 	void StopSprint();
+
+	void RightClickPressed();
+	void RightClickReleased();
+
+	void TryAction(FKey key);
 
 
 private:
@@ -70,7 +77,6 @@ private:
 	
 	void LookUp(float AxisValue);
 	void LookRight(float AxisValue);
-
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -82,14 +88,20 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ChargedProjectileClass;
 
-	UPROPERTY(EditAnywhere)
-	UMaterialParameterCollection* collection;
 
+	//Regular Bullets	
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	UParticleSystem* MuzzleMist;
 
+
+	//Charged Bullets
 	UPROPERTY(EditAnywhere, Category = "Effects")
-	UParticleSystem* ImpactMist;
+	UParticleSystem* ElectrifiedPulse;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ChargingMist;
+
+
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float MaxRange = 10000.f;
@@ -97,32 +109,30 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float FireRate = 0.2;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ReloadTime = 2.0;
 
-	// UPROPERTY(EditAnywhere, Category = "Weapon")
-	// float Speed = 15;
 
 	
 
 public:
 	//Ammo magazines
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int MaxTotalAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int MaxClipAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int TotalAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int ClipAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MaxHealth = 100;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 100;
 
 	FTimerHandle FireHandle;
@@ -130,5 +140,9 @@ public:
 
 	FTimerHandle ReloadHandle;
 	bool ReloadReady = true;
+
+	//Charging 
+	bool bRightClickIsPressed;
+	float fRightClickTime;
 
 };

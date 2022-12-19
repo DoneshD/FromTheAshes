@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "InputCoreTypes.h"
 #include "TimerManager.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
@@ -16,8 +17,8 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-//Check if ready for inheritance
-//YOU GOT TO WORK ON THIS!!!
+// Check if ready for inheritance
+// YOU GOT TO WORK ON THIS!!!
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -48,6 +49,10 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bRightClickIsPressed)
+	{
+		fRightClickTime += DeltaTime;
+	}
 }
 
 // Called to bind functionality to input
@@ -60,6 +65,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AShooterCharacter::LookRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::LookUp);
 
+	// PlayerInputComponent->BindAxis(TEXT("Charging"), this, &AShooterCharacter::ChargeShot);
+
 	// Delete or translate
 	// PlayerInputComponent->BindAction(TEXT("StartSprinting"), EInputEvent::IE_Pressed, this, &AShooterCharacter::StartSprint);
 	// PlayerInputComponent->BindAction(TEXT("StopSprinting"), EInputEvent::IE_Released, this, &AShooterCharacter::StopSprint);
@@ -69,15 +76,48 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 
-	PlayerInputComponent->BindAction(TEXT("ChargeShot"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ChargeShot);
+	// PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Charging);
+	// PlayerInputComponent->BindAction(TEXT("ChargeShot"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ChargeShot);
 
+	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::RightClickPressed);
+	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Released, this, &AShooterCharacter::RightClickReleased);
+}
+
+
+void AShooterCharacter::RightClickPressed()
+{
+	bRightClickIsPressed = true;
+	UGameplayStatics::SpawnEmitterAttached(ChargingMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
+	UE_LOG(LogTemp, Warning, TEXT("Held down"));
+	
+	
 
 }
+
+void AShooterCharacter::RightClickReleased()
+
+{
+	bRightClickIsPressed = false;
+
+	if (fRightClickTime > 1.5)
+	{
+		ChargeShot();
+		UE_LOG(LogTemp, Warning, TEXT(" > 1.5"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT(" < 1.5"));
+	}
+	fRightClickTime = 0.f;
+}
+
+
+
 
 
 void AShooterCharacter::ChargeShot()
 {
-		FHitResult Hit;
+	FHitResult Hit;
 	FVector ShotDirection;
 	FVector End;
 
@@ -94,21 +134,19 @@ void AShooterCharacter::ChargeShot()
 
 		if (ClipAmmo > 0)
 		{
-			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
-			// AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
-			// Projectile->SetOwner(this);
+			UGameplayStatics::SpawnEmitterAttached(ElectrifiedPulse, ProjectileSpawnPoint, TEXT("BulletSocket"));
 			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
-			if(ChargeShot)
+			if (ChargeShot)
 				UE_LOG(LogTemp, Warning, TEXT("Charged"));
 			ChargeShot->SetOwner(this);
-			ClipAmmo = ClipAmmo - 1;
+			ClipAmmo = ClipAmmo - 2;
 		}
 
 		else if (TotalAmmo > 0)
 		{
 			ReloadReady = false;
 			ReloadTimeValid();
-			//It's not a bug, its a feature
+			// It's not a bug, its a feature
 		}
 		else
 		{
@@ -119,7 +157,8 @@ void AShooterCharacter::ChargeShot()
 		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
 	}
 }
-}
+
+
 
 
 void AShooterCharacter::PullTrigger()
@@ -144,9 +183,7 @@ void AShooterCharacter::PullTrigger()
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
-			
-			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
-			ChargeShot->SetOwner(this);
+
 			ClipAmmo = ClipAmmo - 1;
 		}
 
@@ -154,7 +191,7 @@ void AShooterCharacter::PullTrigger()
 		{
 			ReloadReady = false;
 			ReloadTimeValid();
-			//It's not a bug, its a feature
+			// It's not a bug, its a feature
 		}
 		else
 		{

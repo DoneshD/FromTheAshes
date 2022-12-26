@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "ChargedProjectile.h"
 #include "TimerManager.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimSequence.h"
 #include "InputCoreTypes.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -28,11 +30,12 @@ protected:
 	virtual void BeginPlay() override;
 
 
-
-
 public:	
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
+
+	UFUNCTION(BlueprintPure)
+	bool IsShooting() const;
 
 	UFUNCTION(BlueprintPure)
 	float GetHealthPercent() const;
@@ -50,6 +53,8 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	void HandleDestruction();
+	
 	//Shoot 
 	void PullTrigger();
 	void ReloadGun();
@@ -58,17 +63,30 @@ public:
 	void FireRateValid();
 	void ReloadTimeValid();
 
-	void Charging(FKey key);
-	void ChargeShot();
-
 	//Not in use
 	void StartSprint();
 	void StopSprint();
 
-	void RightClickPressed();
-	void RightClickReleased();
+	//Charge Mechanic
+	void Charge();
+	void ChargeTime();
+	void ChargeShot();
 
-	void TryAction(FKey key);
+	void ThrowGrenade();
+
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* ChargeFireAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* RegularFireAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* ThrowAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* ReloadAnim;
+
 
 
 private:
@@ -79,6 +97,7 @@ private:
 	void LookRight(float AxisValue);
 
 
+	//Classes and Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USceneComponent* ProjectileSpawnPoint;
 
@@ -93,7 +112,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	UParticleSystem* MuzzleMist;
 
-
 	//Charged Bullets
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	UParticleSystem* ElectrifiedPulse;
@@ -107,10 +125,10 @@ private:
 	float MaxRange = 10000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float FireRate = 0.2;
+	float FireRate = 0.5;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ReloadTime = 2.0;
+	float ReloadTime = 2.5;
 
 
 	

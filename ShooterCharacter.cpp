@@ -6,6 +6,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimSequence.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,8 +19,6 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-// Check if ready for inheritance
-// YOU GOT TO WORK ON THIS!!!
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -31,10 +31,14 @@ AShooterCharacter::AShooterCharacter()
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Projectile SpawnPoint"));
 	ProjectileSpawnPoint->SetupAttachment(GetMesh());
 
-	MaxTotalAmmo = 108;
-	MaxClipAmmo = 12;
-	TotalAmmo = 72;
-	ClipAmmo = 12;
+	// static ConstructorHelpers::FObjectFinder<UAnimSequence> anim(TEXT("AnimSequence'/Game/Mannequin/Animations/ThirdPersonJump_Start.ThirdPersonJump_Start'"));
+
+	// ShootAnimTEST = anim.Object;
+
+	MaxTotalAmmo = 196;
+	MaxClipAmmo = 24;
+	TotalAmmo = 154;
+	ClipAmmo = 24;
 	ReloadTime = 2;
 }
 
@@ -76,25 +80,21 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 
-	// PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Charging);
-	// PlayerInputComponent->BindAction(TEXT("ChargeShot"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ChargeShot);
 
-	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::RightClickPressed);
-	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Released, this, &AShooterCharacter::RightClickReleased);
+	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Charge);
+	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Released, this, &AShooterCharacter::ChargeTime);
+
+	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Released, this, &AShooterCharacter::ThrowGrenade);
 }
 
 
-void AShooterCharacter::RightClickPressed()
+void AShooterCharacter::Charge()
 {
 	bRightClickIsPressed = true;
 	UGameplayStatics::SpawnEmitterAttached(ChargingMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
-	UE_LOG(LogTemp, Warning, TEXT("Held down"));
-	
-	
-
 }
 
-void AShooterCharacter::RightClickReleased()
+void AShooterCharacter::ChargeTime()
 
 {
 	bRightClickIsPressed = false;
@@ -102,12 +102,8 @@ void AShooterCharacter::RightClickReleased()
 	if (fRightClickTime > 1.5)
 	{
 		ChargeShot();
-		UE_LOG(LogTemp, Warning, TEXT(" > 1.5"));
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT(" < 1.5"));
-	}
+
 	fRightClickTime = 0.f;
 }
 
@@ -136,8 +132,7 @@ void AShooterCharacter::ChargeShot()
 		{
 			UGameplayStatics::SpawnEmitterAttached(ElectrifiedPulse, ProjectileSpawnPoint, TEXT("BulletSocket"));
 			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
-			if (ChargeShot)
-				UE_LOG(LogTemp, Warning, TEXT("Charged"));
+			PlayAnimMontage(ChargeFireAnim);
 			ChargeShot->SetOwner(this);
 			ClipAmmo = ClipAmmo - 2;
 		}
@@ -156,6 +151,13 @@ void AShooterCharacter::ChargeShot()
 		CanFire = false;
 		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
 	}
+}
+
+
+void AShooterCharacter::ThrowGrenade()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Throwing Grenade"));
+	PlayAnimMontage(ThrowAnim);
 }
 
 
@@ -183,6 +185,9 @@ void AShooterCharacter::PullTrigger()
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
+			// PlayAnimMontage(ShootAnim);
+			PlayAnimMontage(RegularFireAnim);
+
 
 			ClipAmmo = ClipAmmo - 1;
 		}
@@ -203,11 +208,6 @@ void AShooterCharacter::PullTrigger()
 	}
 }
 
-void AShooterCharacter::ReloadTimeValid()
-{
-	ReloadReady = true;
-	GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, true);
-}
 
 bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
 {
@@ -248,6 +248,15 @@ float AShooterCharacter::GetHealthPercent() const
 void AShooterCharacter::FireRateValid()
 {
 	CanFire = true;
+}
+
+
+void AShooterCharacter::ReloadTimeValid()
+{
+	ReloadReady = true;
+	if(ClipAmmo != MaxClipAmmo && ReloadReady == true)
+		PlayAnimMontage(ReloadAnim);
+	GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, true);
 }
 
 void AShooterCharacter::ReloadGun()
@@ -300,4 +309,9 @@ void AShooterCharacter::StopSprint()
 bool AShooterCharacter::IsDead() const
 {
 	return Health <= 0;
+}
+
+bool AShooterCharacter::IsShooting() const
+{
+	return true;
 }

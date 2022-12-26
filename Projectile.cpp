@@ -33,6 +33,7 @@ void AProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	StartLocation = GetActorLocation();
 	
 }
 
@@ -59,6 +60,20 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	FVector DistanceDiff = GetActorLocation() - StartLocation;
+	if(DistanceDiff.X > PositiveDestroyDistance || DistanceDiff.Y > PositiveDestroyDistance)
+	{
+		UE_LOG(LogTemp, Display, TEXT("+ Projectile Destroyed"));
+		Destroy();
+	}
+
+
+	if(DistanceDiff.X < NegativeDestroyDistance || DistanceDiff.Y < NegativeDestroyDistance)
+	{
+		UE_LOG(LogTemp, Display, TEXT("- Projectile Destroyed"));
+		Destroy();
+	}
+
 
 }
 

@@ -42,6 +42,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float Damage = 10;
 
+	float PositiveDestroyDistance = 20000;
+	float NegativeDestroyDistance = -20000;
+	FVector StartLocation;
+
 	AController* GetOwnerController() const;
 
 };

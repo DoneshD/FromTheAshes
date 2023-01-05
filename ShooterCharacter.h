@@ -35,9 +35,6 @@ public:
 	bool IsDead() const;
 
 	UFUNCTION(BlueprintPure)
-	bool IsShooting() const;
-
-	UFUNCTION(BlueprintPure)
 	float GetHealthPercent() const;
 	
 	// Called every frame
@@ -46,6 +43,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//Not implemented
 	UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
 	void TriggerOutOfAmmoPopUp();
 
@@ -53,6 +51,7 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	//Not implemented
 	void HandleDestruction();
 	
 	//Shoot 
@@ -63,10 +62,6 @@ public:
 	void FireRateValid();
 	void ReloadTimeValid();
 
-	//Not in use
-	void StartSprint();
-	void StopSprint();
-
 	//Charge Mechanic
 	void Charge();
 	void ChargeTime();
@@ -75,66 +70,19 @@ public:
 	void ThrowGrenade();
 
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* RegularFireAnim;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ThrowAnim;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ReloadAnim;
 
 
-
-private:
-	void MoveForward(float AxisValue);
-	void MoveRight(float AxisValue);
-	
-	void LookUp(float AxisValue);
-	void LookRight(float AxisValue);
-
-
-	//Classes and Components
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USceneComponent* ProjectileSpawnPoint;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<class AProjectile> ProjectileClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<class AProjectile> ChargedProjectileClass;
-
-
-	//Regular Bullets	
-	UPROPERTY(EditAnywhere, Category = "Effects")
-	UParticleSystem* MuzzleMist;
-
-	//Charged Bullets
-	UPROPERTY(EditAnywhere, Category = "Effects")
-	UParticleSystem* ElectrifiedPulse;
-
-	UPROPERTY(EditAnywhere, Category = "Effects")
-	UParticleSystem* ChargingMist;
-
-
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float MaxRange = 10000.f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float FireRate = 0.5;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ReloadTime = 2.5;
-
-
-	
-
-public:
-	//Ammo magazines
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int MaxTotalAmmo;
 
@@ -157,10 +105,58 @@ public:
 	bool CanFire = true;
 
 	FTimerHandle ReloadHandle;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	bool ReloadReady = true;
 
 	//Charging 
 	bool bRightClickIsPressed;
 	float fRightClickTime;
+
+
+
+private:
+	void MoveForward(float AxisValue);
+	void MoveRight(float AxisValue);
+	
+	void LookUp(float AxisValue);
+	void LookRight(float AxisValue);
+
+
+	//Classes and Components
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* ProjectileSpawnPoint;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<class AProjectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<class AProjectile> ChargedProjectileClass;
+
+
+	//Regular Effects	
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* MuzzleMist;
+
+	//Charged Bullets
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ElectrifiedPulse;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ChargingMist;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UParticleSystem* ReloadParticles;
+
+
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float MaxRange = 10000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float FireRate = 0.5;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ReloadTime = 2.0;
 
 };

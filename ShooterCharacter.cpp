@@ -29,11 +29,7 @@ AShooterCharacter::AShooterCharacter()
 	RootComponent = GetCapsuleComponent();
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Projectile SpawnPoint"));
-	ProjectileSpawnPoint->SetupAttachment(GetMesh());
-
-	// static ConstructorHelpers::FObjectFinder<UAnimSequence> anim(TEXT("AnimSequence'/Game/Mannequin/Animations/ThirdPersonJump_Start.ThirdPersonJump_Start'"));
-
-	// ShootAnimTEST = anim.Object;
+	ProjectileSpawnPoint->SetupAttachment(RootComponent);
 
 	MaxTotalAmmo = 196;
 	MaxClipAmmo = 24;
@@ -49,13 +45,16 @@ void AShooterCharacter::BeginPlay()
 	ADystopianShooterGameModeBase *GameMode = GetWorld()->GetAuthGameMode<ADystopianShooterGameModeBase>();
 }
 
-// Called every frame
+// Called every frames
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//Chargeshot 
 	if (bRightClickIsPressed)
 	{
 		fRightClickTime += DeltaTime;
+		UGameplayStatics::SpawnEmitterAttached(ChargingMist, GetMesh(), TEXT("BulletSocket"));
 	}
 }
 
@@ -69,11 +68,6 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AShooterCharacter::LookRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::LookUp);
 
-	// PlayerInputComponent->BindAxis(TEXT("Charging"), this, &AShooterCharacter::ChargeShot);
-
-	// Delete or translate
-	// PlayerInputComponent->BindAction(TEXT("StartSprinting"), EInputEvent::IE_Pressed, this, &AShooterCharacter::StartSprint);
-	// PlayerInputComponent->BindAction(TEXT("StopSprinting"), EInputEvent::IE_Released, this, &AShooterCharacter::StopSprint);
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::PullTrigger);
@@ -91,11 +85,9 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 void AShooterCharacter::Charge()
 {
 	bRightClickIsPressed = true;
-	UGameplayStatics::SpawnEmitterAttached(ChargingMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
 }
 
 void AShooterCharacter::ChargeTime()
-
 {
 	bRightClickIsPressed = false;
 
@@ -108,9 +100,6 @@ void AShooterCharacter::ChargeTime()
 }
 
 
-
-
-
 void AShooterCharacter::ChargeShot()
 {
 	FHitResult Hit;
@@ -120,7 +109,6 @@ void AShooterCharacter::ChargeShot()
 	bool bSuccess = TraceShot(Hit, ShotDirection, End);
 
 	FVector Select = UKismetMathLibrary::SelectVector(Hit.Location, End, bSuccess);
-	FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
@@ -130,7 +118,7 @@ void AShooterCharacter::ChargeShot()
 
 		if (ClipAmmo > 0)
 		{
-			UGameplayStatics::SpawnEmitterAttached(ElectrifiedPulse, ProjectileSpawnPoint, TEXT("BulletSocket"));
+			UGameplayStatics::SpawnEmitterAttached(ElectrifiedPulse, GetMesh(), TEXT("BulletSocket"));
 			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
 			PlayAnimMontage(ChargeFireAnim);
 			ChargeShot->SetOwner(this);
@@ -139,7 +127,6 @@ void AShooterCharacter::ChargeShot()
 
 		else if (TotalAmmo > 0)
 		{
-			ReloadReady = false;
 			ReloadTimeValid();
 			// It's not a bug, its a feature
 		}
@@ -172,7 +159,6 @@ void AShooterCharacter::PullTrigger()
 	bool bSuccess = TraceShot(Hit, ShotDirection, End);
 
 	FVector Select = UKismetMathLibrary::SelectVector(Hit.Location, End, bSuccess);
-	FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
@@ -182,7 +168,7 @@ void AShooterCharacter::PullTrigger()
 
 		if (ClipAmmo > 0)
 		{
-			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, ProjectileSpawnPoint, TEXT("BulletSocket"));
+			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, GetMesh(), TEXT("BulletSocket"));
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
 			// PlayAnimMontage(ShootAnim);
@@ -194,12 +180,12 @@ void AShooterCharacter::PullTrigger()
 
 		else if (TotalAmmo > 0)
 		{
-			ReloadReady = false;
 			ReloadTimeValid();
 			// It's not a bug, its a feature
 		}
 		else
 		{
+			//Need to implement
 			TriggerOutOfAmmoPopUp();
 		}
 
@@ -211,7 +197,6 @@ void AShooterCharacter::PullTrigger()
 
 bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
 {
-
 	AController *OwnerController = GetController();
 	if (OwnerController == nullptr)
 		return false;
@@ -247,21 +232,26 @@ float AShooterCharacter::GetHealthPercent() const
 
 void AShooterCharacter::FireRateValid()
 {
-	CanFire = true;
+	if(ReloadReady)
+		CanFire = true;
 }
 
 
 void AShooterCharacter::ReloadTimeValid()
 {
-	ReloadReady = true;
 	if(ClipAmmo != MaxClipAmmo && ReloadReady == true)
+	{
+		ReloadReady = false;
 		PlayAnimMontage(ReloadAnim);
-	GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, true);
+		UGameplayStatics::SpawnEmitterAttached(ReloadParticles, GetMesh(), TEXT("FX_Gun_Barrel"));
+		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, false);
+	}
+
 }
 
 void AShooterCharacter::ReloadGun()
 {
-	if (ClipAmmo != MaxClipAmmo && ReloadReady == true)
+	if (ClipAmmo != MaxClipAmmo)
 	{
 		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
 		{
@@ -274,7 +264,7 @@ void AShooterCharacter::ReloadGun()
 			TotalAmmo = 0;
 		}
 	}
-	ReloadReady = false;
+	ReloadReady = true;
 }
 
 void AShooterCharacter::MoveForward(float AxisValue)
@@ -297,21 +287,8 @@ void AShooterCharacter::LookRight(float AxisValue)
 	AddControllerYawInput(AxisValue);
 }
 
-void AShooterCharacter::StartSprint()
-{
-	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
-}
-void AShooterCharacter::StopSprint()
-{
-	GetCharacterMovement()->MaxWalkSpeed = 600.f;
-}
 
 bool AShooterCharacter::IsDead() const
 {
 	return Health <= 0;
-}
-
-bool AShooterCharacter::IsShooting() const
-{
-	return true;
 }

@@ -61,14 +61,20 @@ public:
 	//For firerate
 	void FireRateValid();
 	void ReloadTimeValid();
+	void ShockwaveValid();
 
 	//Charge Mechanic
 	void Charge();
 	void ChargeTime();
 	void ChargeShot();
 
-	void ThrowGrenade();
+	void AugmentCharge();
+	void AugmentRelease();
 
+	void ThrowGrenade();
+	void ShockwavePressed();
+
+	void ResetTimeDilation();
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
@@ -81,6 +87,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ReloadAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	UAnimMontage* AugmentAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	UAnimMontage* ShockwaveAnim;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -102,16 +114,35 @@ public:
 	float Health = 100;
 
 	FTimerHandle FireHandle;
-	bool CanFire = true;
-
 	FTimerHandle ReloadHandle;
+	FTimerHandle ShockwaveHandle;
+	FTimerHandle UltiHandle;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	bool ShockwaveReady = true;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	bool CanFire = true;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	bool ReloadReady = true;
 
-	//Charging 
+	//ChargeShot
 	bool bRightClickIsPressed;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	float fRightClickTime;
+
+	//AugmentCharge
+	bool bAugmentCharge;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	float fAugmentChargeTime;
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	bool bAugmentReady = false;
+
+
+	
 
 
 
@@ -124,8 +155,9 @@ private:
 
 
 	//Classes and Components
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USceneComponent* ProjectileSpawnPoint;
+	USceneComponent* ShockwaveSpawnPoint;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ProjectileClass;
@@ -133,20 +165,44 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ChargedProjectileClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<class AProjectile> UltimateProjectileClass;
+
 
 	//Regular Effects	
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Regular Effects")
 	UParticleSystem* MuzzleMist;
+	
+	UPROPERTY(EditAnywhere, Category = "Regular Effects")
+	UParticleSystem* ReloadParticles;
 
 	//Charged Bullets
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Charged Effects")
 	UParticleSystem* ElectrifiedPulse;
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Charged Effects")
 	UParticleSystem* ChargingMist;
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
-	UParticleSystem* ReloadParticles;
+	//Augment Effects
+	UPROPERTY(EditAnywhere, Category = "Augment Effects")
+	UParticleSystem* UlimateShotCharging;
+
+	UPROPERTY(EditAnywhere, Category = "Augment Effects")
+	UParticleSystem* UltimateShotPulse;
+
+	UPROPERTY(EditAnywhere, Category = "Augment Effects")
+	UParticleSystem* AugmentParticles;
+
+	UPROPERTY(EditAnywhere, Category = "Augment Effects")
+	UParticleSystem* AugmentEyes;
+
+	UPROPERTY(EditAnywhere, Category = "Augment Effects")
+	UParticleSystem* AugmentChargedParticles;
+
+	UPROPERTY(EditAnywhere, Category = "Shockwave Effects")
+	UParticleSystem* ShockwaveParticles;
+
+
 
 
 
@@ -154,9 +210,12 @@ private:
 	float MaxRange = 10000.f;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float FireRate = 0.5;
+	float FireRate;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ReloadTime = 2.0;
+
+
+	float ShockwaveDuration;
 
 };

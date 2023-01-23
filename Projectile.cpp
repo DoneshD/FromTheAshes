@@ -2,6 +2,7 @@
 
 
 #include "Projectile.h"
+#include "ShooterCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/DamageType.h"
@@ -49,7 +50,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	AActor* HitActor = Hit.GetActor();
 	if(OtherActor && OtherActor != this && OtherActor != MyOwner){
 		if(HitParticles)
-			UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());
+			UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());\
 			FPointDamageEvent DamageEvent(Damage, Hit, NormalImpulse, nullptr);
 			HitActor->TakeDamage(Damage, DamageEvent, MyOwnerInstigator, this);
 	}

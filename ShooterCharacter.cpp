@@ -9,6 +9,7 @@
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequence.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/WorldSettings.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "InputCoreTypes.h"
@@ -19,7 +20,6 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
@@ -28,14 +28,15 @@ AShooterCharacter::AShooterCharacter()
 
 	RootComponent = GetCapsuleComponent();
 
-	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Projectile SpawnPoint"));
-	ProjectileSpawnPoint->SetupAttachment(RootComponent);
 
 	MaxTotalAmmo = 196;
 	MaxClipAmmo = 24;
-	TotalAmmo = 154;
+	TotalAmmo = 156;
 	ClipAmmo = 24;
 	ReloadTime = 2;
+
+	GetCharacterMovement()->MaxWalkSpeed = 800;
+	
 }
 
 // Called when the game starts or when spawned
@@ -50,13 +51,45 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//Chargeshot 
+	GetCharacterMovement()->MaxWalkSpeed = 800;
+
+	// Chargeshot
 	if (bRightClickIsPressed)
 	{
 		fRightClickTime += DeltaTime;
-		UGameplayStatics::SpawnEmitterAttached(ChargingMist, GetMesh(), TEXT("BulletSocket"));
+		
+		if(!bAugmentReady)
+			UGameplayStatics::SpawnEmitterAttached(ChargingMist, GetMesh(), TEXT("BulletSocket"));
+
+		if(bAugmentReady)
+		{
+			UGameplayStatics::SpawnEmitterAttached(UlimateShotCharging, GetMesh(), TEXT("BulletSocket"));
+		}
 	}
+
+	if (bAugmentCharge && !bAugmentReady)
+	{
+		fAugmentChargeTime += DeltaTime;
+		CanFire = false;
+		UGameplayStatics::SpawnEmitterAttached(AugmentParticles, GetMesh(), TEXT("AugmentSocket"));
+		if (fAugmentChargeTime > 1.0)
+		{
+			bAugmentReady = true;
+			fAugmentChargeTime = 0.f;
+		}
+	}
+	if (bAugmentReady || !bAugmentCharge)
+	{
+		StopAnimMontage(AugmentAnim);
+	}
+	if (bAugmentReady)
+	{
+		UGameplayStatics::SpawnEmitterAttached(AugmentChargedParticles, GetMesh(), TEXT("AugmentSocket"));
+		GetCharacterMovement()->MaxWalkSpeed = 1200;
+	}
+	
 }
+
 
 // Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
@@ -68,19 +101,40 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AShooterCharacter::LookRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AShooterCharacter::LookUp);
 
-
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::PullTrigger);
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &AShooterCharacter::ReloadTimeValid);
 
-
 	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Charge);
 	PlayerInputComponent->BindAction(TEXT("Charging"), EInputEvent::IE_Released, this, &AShooterCharacter::ChargeTime);
 
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Released, this, &AShooterCharacter::ThrowGrenade);
+
+	PlayerInputComponent->BindAction(TEXT("Augment"), EInputEvent::IE_Pressed, this, &AShooterCharacter::AugmentCharge);
+	PlayerInputComponent->BindAction(TEXT("Augment"), EInputEvent::IE_Released, this, &AShooterCharacter::AugmentRelease);
+
+	PlayerInputComponent->BindAction(TEXT("Shockwave"), EInputEvent::IE_Released, this, &AShooterCharacter::ShockwavePressed);
 }
 
+
+void AShooterCharacter::ShockwavePressed()
+{
+	if(ShockwaveReady)
+	{
+		ShockwaveReady = false;
+		PlayAnimMontage(ShockwaveAnim);
+		ShockwaveDuration = PlayAnimMontage(ShockwaveAnim);
+		GetWorldTimerManager().SetTimer(ShockwaveHandle, this, &AShooterCharacter::ShockwaveValid, ShockwaveDuration, true);
+	}
+}
+
+
+
+void AShooterCharacter::ShockwaveValid()
+{
+	ShockwaveReady = true;
+}
 
 void AShooterCharacter::Charge()
 {
@@ -99,7 +153,6 @@ void AShooterCharacter::ChargeTime()
 	fRightClickTime = 0.f;
 }
 
-
 void AShooterCharacter::ChargeShot()
 {
 	FHitResult Hit;
@@ -113,10 +166,19 @@ void AShooterCharacter::ChargeShot()
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
 
-	if (CanFire)
-	{
+	if (bAugmentReady && ClipAmmo > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("UlitmateShot"));
+			UGameplayStatics::SpawnEmitterAttached(UltimateShotPulse, GetMesh(), TEXT("BulletSocket"));
+			AProjectile *UltimateShot = GetWorld()->SpawnActor<AProjectile>(UltimateProjectileClass, LookFire);
+			PlayAnimMontage(ChargeFireAnim);
+			UltimateShot->SetOwner(this);
+			ClipAmmo = ClipAmmo - 3;
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.25);
+			GetWorldTimerManager().SetTimer(UltiHandle, this, &AShooterCharacter::ResetTimeDilation, .1, true);
+		}
 
-		if (ClipAmmo > 0)
+		else if (ClipAmmo > 0)
 		{
 			UGameplayStatics::SpawnEmitterAttached(ElectrifiedPulse, GetMesh(), TEXT("BulletSocket"));
 			AProjectile *ChargeShot = GetWorld()->SpawnActor<AProjectile>(ChargedProjectileClass, LookFire);
@@ -134,21 +196,30 @@ void AShooterCharacter::ChargeShot()
 		{
 			TriggerOutOfAmmoPopUp();
 		}
-
-		CanFire = false;
-		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
-	}
+	
+	bAugmentReady = false;
 }
-
 
 void AShooterCharacter::ThrowGrenade()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Throwing Grenade"));
 	PlayAnimMontage(ThrowAnim);
 }
 
+void AShooterCharacter::AugmentCharge()
+{
+	bAugmentCharge = true;
+	CanFire = false;
+	PlayAnimMontage(AugmentAnim);
+}
 
+void AShooterCharacter::AugmentRelease()
+{
 
+	bAugmentCharge = false;
+	CanFire = true;
+	GetCharacterMovement()->MaxWalkSpeed = 800;
+	fAugmentChargeTime = 0.f;
+}
 
 void AShooterCharacter::PullTrigger()
 {
@@ -171,29 +242,26 @@ void AShooterCharacter::PullTrigger()
 			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, GetMesh(), TEXT("BulletSocket"));
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
-			// PlayAnimMontage(ShootAnim);
 			PlayAnimMontage(RegularFireAnim);
-
-
 			ClipAmmo = ClipAmmo - 1;
+			FireRate = PlayAnimMontage(RegularFireAnim);
 		}
 
 		else if (TotalAmmo > 0)
 		{
 			ReloadTimeValid();
-			// It's not a bug, its a feature
 		}
 		else
 		{
-			//Need to implement
+			// Need to implement
 			TriggerOutOfAmmoPopUp();
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Fire Rate: %f"), FireRate);
 
 		CanFire = false;
-		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, FireRate, true);
+		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, .35, true);
 	}
 }
-
 
 bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
 {
@@ -232,21 +300,20 @@ float AShooterCharacter::GetHealthPercent() const
 
 void AShooterCharacter::FireRateValid()
 {
-	if(ReloadReady)
+	if (ReloadReady)
 		CanFire = true;
+	
 }
-
 
 void AShooterCharacter::ReloadTimeValid()
 {
-	if(ClipAmmo != MaxClipAmmo && ReloadReady == true)
+	if (ClipAmmo != MaxClipAmmo && ReloadReady && !bAugmentCharge)
 	{
 		ReloadReady = false;
 		PlayAnimMontage(ReloadAnim);
 		UGameplayStatics::SpawnEmitterAttached(ReloadParticles, GetMesh(), TEXT("FX_Gun_Barrel"));
 		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, false);
 	}
-
 }
 
 void AShooterCharacter::ReloadGun()
@@ -265,6 +332,11 @@ void AShooterCharacter::ReloadGun()
 		}
 	}
 	ReloadReady = true;
+}
+
+void AShooterCharacter::ResetTimeDilation()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1);
 }
 
 void AShooterCharacter::MoveForward(float AxisValue)
@@ -286,7 +358,6 @@ void AShooterCharacter::LookRight(float AxisValue)
 {
 	AddControllerYawInput(AxisValue);
 }
-
 
 bool AShooterCharacter::IsDead() const
 {

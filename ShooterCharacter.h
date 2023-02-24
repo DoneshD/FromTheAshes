@@ -95,22 +95,25 @@ public:
 	UAnimMontage* ShockwaveAnim;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
 	int MaxTotalAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
 	int MaxClipAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
 	int TotalAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
 	int ClipAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
+	int AugmentBullets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float MaxHealth = 100;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float Health = 100;
 
 	FTimerHandle FireHandle;
@@ -144,8 +147,6 @@ public:
 
 	
 
-
-
 private:
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
@@ -159,13 +160,13 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USceneComponent* ShockwaveSpawnPoint;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> ProjectileClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> ChargedProjectileClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> UltimateProjectileClass;
 
 
@@ -204,17 +205,14 @@ private:
 
 
 
-
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Reaper Combat")
 	float MaxRange = 10000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Reaper Combat")
 	float FireRate;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Reaper Combat")
 	float ReloadTime = 2.0;
-
 
 	float ShockwaveDuration;
 

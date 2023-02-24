@@ -24,5 +24,7 @@ public:
 private:
 	UPROPERTY(EditAnywhere)
 	class UBehaviorTree* AIBehavior; 
+
+	FVector PatrolLocation = FVector(7715.903809, -2155.557636, 0);
 	
 };

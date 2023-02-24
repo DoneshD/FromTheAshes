@@ -12,9 +12,11 @@ void AShooterAIController::BeginPlay()
 
     if(AIBehavior){
         RunBehaviorTree(AIBehavior);
+        UE_LOG(LogTemp, Warning, TEXT("Patrol: %s"), *PatrolLocation.ToString());
 
         APawn *PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
         GetBlackboardComponent()->SetValueAsVector(TEXT("StartLocation"), GetPawn()->GetActorLocation());
+        GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolLocation"), PatrolLocation);
     }
 
 }

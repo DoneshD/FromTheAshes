@@ -49,10 +49,19 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	AController* MyOwnerInstigator = MyOwner->GetInstigatorController();
 	AActor* HitActor = Hit.GetActor();
 	if(OtherActor && OtherActor != this && OtherActor != MyOwner){
+
 		if(HitParticles)
 			UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());\
 			FPointDamageEvent DamageEvent(Damage, Hit, NormalImpulse, nullptr);
 			HitActor->TakeDamage(Damage, DamageEvent, MyOwnerInstigator, this);
+
+			AShooterCharacter* Shooter = Cast<AShooterCharacter>(MyOwner);
+			AShooterCharacter* Enemy = Cast<AShooterCharacter>(HitActor);
+			if(Shooter->bAugmentReady && Enemy)
+			{
+				Shooter->Health += 10;
+			}
+
 	}
 	Destroy();
 }
@@ -64,14 +73,12 @@ void AProjectile::Tick(float DeltaTime)
 	FVector DistanceDiff = GetActorLocation() - StartLocation;
 	if(DistanceDiff.X > PositiveDestroyDistance || DistanceDiff.Y > PositiveDestroyDistance)
 	{
-		UE_LOG(LogTemp, Display, TEXT("+ Projectile Destroyed"));
 		Destroy();
 	}
 
 
 	if(DistanceDiff.X < NegativeDestroyDistance || DistanceDiff.Y < NegativeDestroyDistance)
 	{
-		UE_LOG(LogTemp, Display, TEXT("- Projectile Destroyed"));
 		Destroy();
 	}
 

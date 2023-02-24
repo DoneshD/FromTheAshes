@@ -67,6 +67,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 		}
 	}
 
+	//Augment Charge
 	if (bAugmentCharge && !bAugmentReady)
 	{
 		fAugmentChargeTime += DeltaTime;
@@ -118,22 +119,158 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCo
 }
 
 
-void AShooterCharacter::ShockwavePressed()
+void AShooterCharacter::ResetTimeDilation()
 {
-	if(ShockwaveReady)
-	{
-		ShockwaveReady = false;
-		PlayAnimMontage(ShockwaveAnim);
-		ShockwaveDuration = PlayAnimMontage(ShockwaveAnim);
-		GetWorldTimerManager().SetTimer(ShockwaveHandle, this, &AShooterCharacter::ShockwaveValid, ShockwaveDuration, true);
-	}
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1);
+}
+
+void AShooterCharacter::MoveForward(float AxisValue)
+{
+	AddMovementInput(GetActorForwardVector() * AxisValue);
+}
+
+void AShooterCharacter::MoveRight(float AxisValue)
+{
+	AddMovementInput(GetActorRightVector() * AxisValue);
+}
+
+void AShooterCharacter::LookUp(float AxisValue)
+{
+	AddControllerPitchInput(AxisValue);
+}
+
+void AShooterCharacter::LookRight(float AxisValue)
+{
+	AddControllerYawInput(AxisValue);
+}
+
+bool AShooterCharacter::IsDead() const
+{
+	return Health <= 0;
+}
+
+float AShooterCharacter::GetHealthPercent() const
+{
+	return Health / MaxHealth;
+}
+
+void AShooterCharacter::FireRateValid()
+{
+	if (ReloadReady)
+		CanFire = true;	
 }
 
 
-
-void AShooterCharacter::ShockwaveValid()
+void AShooterCharacter::PullTrigger()
 {
-	ShockwaveReady = true;
+	FHitResult Hit;
+	FVector ShotDirection;
+	FVector End;
+
+	bool bSuccess = TraceShot(Hit, ShotDirection, End);
+
+	FVector Select = UKismetMathLibrary::SelectVector(Hit.Location, End, bSuccess);
+	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
+	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
+	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
+	
+	if(AugmentBullets <= 1)
+	{
+		bAugmentReady = false;
+	}
+	
+
+	if (CanFire)
+	{
+
+		if(bAugmentReady && ClipAmmo > 0 && AugmentBullets > 0)
+		{
+			AugmentBullets -= 1;
+			ClipAmmo = ClipAmmo - 1;
+		}
+
+		if (ClipAmmo > 0)
+		{
+			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, GetMesh(), TEXT("BulletSocket"));
+			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
+			Projectile->SetOwner(this);
+			PlayAnimMontage(RegularFireAnim);
+			ClipAmmo = ClipAmmo - 1;
+			FireRate = PlayAnimMontage(RegularFireAnim);
+		}
+
+		else if (TotalAmmo > 0)
+		{
+			ReloadTimeValid();
+		}
+		else
+		{
+			// Need to implement
+			TriggerOutOfAmmoPopUp();
+		}
+
+		CanFire = false;
+		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, .35, true);
+	}
+}
+
+bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
+{
+	AController *OwnerController = GetController();
+	if (OwnerController == nullptr)
+		return false;
+
+	FVector Location;
+	FRotator Rotation;
+
+	OwnerController->GetPlayerViewPoint(Location, Rotation);
+	ShotDirection = -Rotation.Vector();
+
+	End = Location + Rotation.Vector() * 50000.f;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(GetOwner());
+
+	return GetWorld()->LineTraceSingleByChannel(Hit, Location, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
+}
+
+float AShooterCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
+{
+	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	DamageToApply = FMath::Min(Health, DamageToApply);
+	Health -= DamageToApply;
+
+	return DamageToApply;
+}
+
+void AShooterCharacter::ReloadTimeValid()
+{
+	if (ClipAmmo != MaxClipAmmo && ReloadReady && !bAugmentCharge)
+	{
+		ReloadReady = false;
+		PlayAnimMontage(ReloadAnim);
+		UGameplayStatics::SpawnEmitterAttached(ReloadParticles, GetMesh(), TEXT("FX_Gun_Barrel"));
+		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, false);
+	}
+}
+
+void AShooterCharacter::ReloadGun()
+{
+	if (ClipAmmo != MaxClipAmmo)
+	{
+		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
+		{
+			TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
+			ClipAmmo = MaxClipAmmo;
+		}
+		else
+		{
+			ClipAmmo = ClipAmmo + TotalAmmo;
+			TotalAmmo = 0;
+		}
+	}
+	ReloadReady = true;
 }
 
 void AShooterCharacter::Charge()
@@ -205,161 +342,39 @@ void AShooterCharacter::ThrowGrenade()
 	PlayAnimMontage(ThrowAnim);
 }
 
+void AShooterCharacter::ShockwavePressed()
+{
+	if(ShockwaveReady)
+	{
+		ShockwaveReady = false;
+		PlayAnimMontage(ShockwaveAnim);
+		ShockwaveDuration = PlayAnimMontage(ShockwaveAnim);
+		GetWorldTimerManager().SetTimer(ShockwaveHandle, this, &AShooterCharacter::ShockwaveValid, ShockwaveDuration, true);
+	}
+}
+
+void AShooterCharacter::ShockwaveValid()
+{
+	ShockwaveReady = true;
+}
+
 void AShooterCharacter::AugmentCharge()
 {
-	bAugmentCharge = true;
-	CanFire = false;
-	PlayAnimMontage(AugmentAnim);
+	if(ReloadReady)
+	{
+		bAugmentCharge = true;
+		CanFire = false;
+		PlayAnimMontage(AugmentAnim);
+	}
 }
 
 void AShooterCharacter::AugmentRelease()
 {
 
 	bAugmentCharge = false;
-	CanFire = true;
 	GetCharacterMovement()->MaxWalkSpeed = 800;
 	fAugmentChargeTime = 0.f;
+	AugmentBullets = 5;
 }
 
-void AShooterCharacter::PullTrigger()
-{
-	FHitResult Hit;
-	FVector ShotDirection;
-	FVector End;
 
-	bool bSuccess = TraceShot(Hit, ShotDirection, End);
-
-	FVector Select = UKismetMathLibrary::SelectVector(Hit.Location, End, bSuccess);
-	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
-	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
-	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
-
-	if (CanFire)
-	{
-
-		if (ClipAmmo > 0)
-		{
-			UGameplayStatics::SpawnEmitterAttached(MuzzleMist, GetMesh(), TEXT("BulletSocket"));
-			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
-			Projectile->SetOwner(this);
-			PlayAnimMontage(RegularFireAnim);
-			ClipAmmo = ClipAmmo - 1;
-			FireRate = PlayAnimMontage(RegularFireAnim);
-		}
-
-		else if (TotalAmmo > 0)
-		{
-			ReloadTimeValid();
-		}
-		else
-		{
-			// Need to implement
-			TriggerOutOfAmmoPopUp();
-		}
-		UE_LOG(LogTemp, Warning, TEXT("Fire Rate: %f"), FireRate);
-
-		CanFire = false;
-		GetWorldTimerManager().SetTimer(FireHandle, this, &AShooterCharacter::FireRateValid, .35, true);
-	}
-}
-
-bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVector &End)
-{
-	AController *OwnerController = GetController();
-	if (OwnerController == nullptr)
-		return false;
-
-	FVector Location;
-	FRotator Rotation;
-
-	OwnerController->GetPlayerViewPoint(Location, Rotation);
-	ShotDirection = -Rotation.Vector();
-
-	End = Location + Rotation.Vector() * 50000.f;
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-	Params.AddIgnoredActor(GetOwner());
-
-	return GetWorld()->LineTraceSingleByChannel(Hit, Location, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
-}
-
-float AShooterCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
-{
-	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	DamageToApply = FMath::Min(Health, DamageToApply);
-	Health -= DamageToApply;
-
-	return DamageToApply;
-}
-
-float AShooterCharacter::GetHealthPercent() const
-{
-	return Health / MaxHealth;
-}
-
-void AShooterCharacter::FireRateValid()
-{
-	if (ReloadReady)
-		CanFire = true;
-	
-}
-
-void AShooterCharacter::ReloadTimeValid()
-{
-	if (ClipAmmo != MaxClipAmmo && ReloadReady && !bAugmentCharge)
-	{
-		ReloadReady = false;
-		PlayAnimMontage(ReloadAnim);
-		UGameplayStatics::SpawnEmitterAttached(ReloadParticles, GetMesh(), TEXT("FX_Gun_Barrel"));
-		GetWorldTimerManager().SetTimer(ReloadHandle, this, &AShooterCharacter::ReloadGun, ReloadTime, false);
-	}
-}
-
-void AShooterCharacter::ReloadGun()
-{
-	if (ClipAmmo != MaxClipAmmo)
-	{
-		if (TotalAmmo - (MaxClipAmmo - ClipAmmo) >= 0)
-		{
-			TotalAmmo = TotalAmmo - (MaxClipAmmo - ClipAmmo);
-			ClipAmmo = MaxClipAmmo;
-		}
-		else
-		{
-			ClipAmmo = ClipAmmo + TotalAmmo;
-			TotalAmmo = 0;
-		}
-	}
-	ReloadReady = true;
-}
-
-void AShooterCharacter::ResetTimeDilation()
-{
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1);
-}
-
-void AShooterCharacter::MoveForward(float AxisValue)
-{
-	AddMovementInput(GetActorForwardVector() * AxisValue);
-}
-
-void AShooterCharacter::MoveRight(float AxisValue)
-{
-	AddMovementInput(GetActorRightVector() * AxisValue);
-}
-
-void AShooterCharacter::LookUp(float AxisValue)
-{
-	AddControllerPitchInput(AxisValue);
-}
-
-void AShooterCharacter::LookRight(float AxisValue)
-{
-	AddControllerYawInput(AxisValue);
-}
-
-bool AShooterCharacter::IsDead() const
-{
-	return Health <= 0;
-}

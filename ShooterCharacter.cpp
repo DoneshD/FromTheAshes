@@ -160,6 +160,22 @@ void AShooterCharacter::FireRateValid()
 		CanFire = true;	
 }
 
+// Select a random vector between the left and right vectors
+FVector AShooterCharacter::GetRandomVectorBetween(FVector LeftVector, FVector RightVector)
+{
+    float Alpha = FMath::RandBool() ? 1.0f : 0.0f;
+    return FMath::Lerp(LeftVector, RightVector, Alpha);
+}
+
+
+void AShooterCharacter::EnemyDodge(AShooterCharacter* EnemyDodge)
+{
+	UE_LOG(LogTemp, Warning, TEXT("In function"));
+	
+	FVector LaunchVelocity = GetRandomVectorBetween(GetActorRightVector() * -1, GetActorRightVector()) * DodgeSpeed;
+    EnemyDodge->LaunchCharacter(LaunchVelocity, false, false);
+}
+
 
 void AShooterCharacter::PullTrigger()
 {
@@ -173,16 +189,36 @@ void AShooterCharacter::PullTrigger()
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
+
+	
+	if (IsPlayerControlled()) 
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor)
+		{
+			UCapsuleComponent* HitCapsule = HitActor->FindComponentByClass<UCapsuleComponent>();
+			if (HitCapsule)
+			{
+				// Try to cast the hit actor to a MyCharacter
+				AShooterCharacter* EnemyShooter = Cast<AShooterCharacter>(HitActor);
+				if (EnemyShooter)
+					{
+						EnemyDodge(EnemyShooter);
+					}
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Pulling Trigger"));
 	
 	if(AugmentBullets <= 1)
 	{
 		bAugmentReady = false;
 	}
 	
-
 	if (CanFire)
 	{
-
+		UE_LOG(LogTemp, Warning, TEXT("Bullet Firing"));
 		if(bAugmentReady && ClipAmmo > 0 && AugmentBullets > 0)
 		{
 			AugmentBullets -= 1;

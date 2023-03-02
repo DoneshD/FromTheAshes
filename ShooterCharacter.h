@@ -55,6 +55,7 @@ public:
 	void HandleDestruction();
 	
 	//Shoot 
+	UFUNCTION(BlueprintCallable, Category = "MyCategory")
 	void PullTrigger();
 	void ReloadGun();
 
@@ -75,6 +76,9 @@ public:
 	void ShockwavePressed();
 
 	void ResetTimeDilation();
+	
+	void EnemyDodge(AShooterCharacter* EnemyDodge);
+	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
@@ -116,6 +120,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float Health = 100;
 
+	FVector DodgeDirection = FVector(0, 0, 500);
+	float DodgeSpeed = 3000;
+
 	FTimerHandle FireHandle;
 	FTimerHandle ReloadHandle;
 	FTimerHandle ShockwaveHandle;
@@ -141,11 +148,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	float fAugmentChargeTime;
+
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 	bool bAugmentReady = false;
 
-
-	
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	bool bDodge = false;
 
 private:
 	void MoveForward(float AxisValue);

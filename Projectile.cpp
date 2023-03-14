@@ -22,8 +22,8 @@ AProjectile::AProjectile()
 	TrailParticles->SetupAttachment(RootComponent);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Projectile Movement Component"));
-	ProjectileMovementComponent->MaxSpeed = 15000.f;
-	ProjectileMovementComponent->InitialSpeed = 15000.f;
+	ProjectileMovementComponent->MaxSpeed = 10000.f;
+	ProjectileMovementComponent->InitialSpeed = 10000.f;
 
 
 }
@@ -41,6 +41,7 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	AActor* MyOwner = GetOwner();
+
 	if(MyOwner == nullptr){
 		Destroy();
 		return;
@@ -48,8 +49,11 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	
 	AController* MyOwnerInstigator = MyOwner->GetInstigatorController();
 	AActor* HitActor = Hit.GetActor();
-	if(OtherActor && OtherActor != this && OtherActor != MyOwner){
+	
 
+
+	if(OtherActor && OtherActor != this && OtherActor != MyOwner)
+	{
 		if(HitParticles)
 			UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());\
 			FPointDamageEvent DamageEvent(Damage, Hit, NormalImpulse, nullptr);

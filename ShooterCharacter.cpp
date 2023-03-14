@@ -51,6 +51,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//TODO: Fix me
 	GetCharacterMovement()->MaxWalkSpeed = 800;
 
 	// Chargeshot
@@ -167,12 +168,16 @@ FVector AShooterCharacter::GetRandomVectorBetween(FVector LeftVector, FVector Ri
     return FMath::Lerp(LeftVector, RightVector, Alpha);
 }
 
+bool AShooterCharacter::GetRandomBoolBetween(bool ShouldDodge, bool DontDodge)
+{
+	float Alpha = FMath::RandBool() ? 1.0f : 0.0f;
+    return FMath::Lerp(ShouldDodge, DontDodge, Alpha);
+}
+
 
 void AShooterCharacter::EnemyDodge(AShooterCharacter* EnemyDodge)
 {
-	UE_LOG(LogTemp, Warning, TEXT("In function"));
-	
-	FVector LaunchVelocity = GetRandomVectorBetween(GetActorRightVector() * -1, GetActorRightVector()) * DodgeSpeed;
+	FVector LaunchVelocity = EnemyDodge->GetVelocity() * GetRandomVectorBetween(GetActorRightVector() * -1, GetActorRightVector()) * DodgeSpeed;
     EnemyDodge->LaunchCharacter(LaunchVelocity, false, false);
 }
 
@@ -189,36 +194,36 @@ void AShooterCharacter::PullTrigger()
 	FVector SocketLocation = GetMesh()->GetSocketLocation(TEXT("BulletSocket"));
 	FRotator LookRotation = UKismetMathLibrary::FindLookAtRotation(SocketLocation, Select);
 	FTransform LookFire = UKismetMathLibrary::MakeTransform(SocketLocation, LookRotation);
-
 	
-	if (IsPlayerControlled()) 
+	AActor* HitActor = Hit.GetActor();
+	if (IsPlayerControlled() && HitActor)
 	{
-		AActor* HitActor = Hit.GetActor();
-		if (HitActor)
+		UCapsuleComponent* HitCapsule = HitActor->FindComponentByClass<UCapsuleComponent>();
+		if (HitCapsule)
 		{
-			UCapsuleComponent* HitCapsule = HitActor->FindComponentByClass<UCapsuleComponent>();
-			if (HitCapsule)
-			{
-				// Try to cast the hit actor to a MyCharacter
-				AShooterCharacter* EnemyShooter = Cast<AShooterCharacter>(HitActor);
-				if (EnemyShooter)
+			// Try to cast the hit actor to a MyCharacter
+			AShooterCharacter* EnemyShooter = Cast<AShooterCharacter>(HitActor);
+			if (EnemyShooter)
+				{
+					bool CanDodge = GetRandomBoolBetween(true, false);
+					if (CanDodge)
 					{
 						EnemyDodge(EnemyShooter);
 					}
-			}
+				}
 		}
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Pulling Trigger"));
+	
 	
 	if(AugmentBullets <= 1)
 	{
 		bAugmentReady = false;
 	}
 	
+	AShooterCharacter* Azrael = Cast<AShooterCharacter>(GetOwner());
+
 	if (CanFire)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Bullet Firing"));
 		if(bAugmentReady && ClipAmmo > 0 && AugmentBullets > 0)
 		{
 			AugmentBullets -= 1;
@@ -231,8 +236,9 @@ void AShooterCharacter::PullTrigger()
 			AProjectile *Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, LookFire);
 			Projectile->SetOwner(this);
 			PlayAnimMontage(RegularFireAnim);
+			UE_LOG(LogTemp, Warning, TEXT("Anim Called"));
 			ClipAmmo = ClipAmmo - 1;
-			FireRate = PlayAnimMontage(RegularFireAnim);
+			// FireRate = PlayAnimMontage(RegularFireAnim);
 		}
 
 		else if (TotalAmmo > 0)
@@ -271,11 +277,18 @@ bool AShooterCharacter::TraceShot(FHitResult &Hit, FVector &ShotDirection, FVect
 	return GetWorld()->LineTraceSingleByChannel(Hit, Location, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
 }
 
+
 float AShooterCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const &DamageEvent, class AController *EventInstigator, AActor *DamageCauser)
 {
 	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	DamageToApply = FMath::Min(Health, DamageToApply);
 	Health -= DamageToApply;
+	if (IsDead())
+	{
+		DetachFromControllerPendingDestroy();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	}
 
 	return DamageToApply;
 }

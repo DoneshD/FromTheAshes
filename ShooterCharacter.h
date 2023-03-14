@@ -48,6 +48,7 @@ public:
 	void TriggerOutOfAmmoPopUp();
 
 	bool TraceShot(FHitResult& Hit,  FVector& ShotDirection, FVector& End);
+	
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -79,6 +80,7 @@ public:
 	
 	void EnemyDodge(AShooterCharacter* EnemyDodge);
 	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
+	bool GetRandomBoolBetween(bool ShouldDodge, bool DontDodge);
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
@@ -120,8 +122,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float Health = 100;
 
+
 	FVector DodgeDirection = FVector(0, 0, 500);
-	float DodgeSpeed = 3000;
+	float DodgeSpeed = 100;
 
 	FTimerHandle FireHandle;
 	FTimerHandle ReloadHandle;
@@ -181,7 +184,7 @@ private:
 	//Regular Effects	
 	UPROPERTY(EditAnywhere, Category = "Regular Effects")
 	UParticleSystem* MuzzleMist;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Regular Effects")
 	UParticleSystem* ReloadParticles;
 

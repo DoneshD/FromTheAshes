@@ -3,6 +3,8 @@
 #include "ShooterCharacter.h"
 #include "Projectile.h"
 #include "ChargedProjectile.h"
+#include "AugmentOrb.h"
+#include "OrbState.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -184,6 +186,7 @@ void AShooterCharacter::EnemyDodge(AShooterCharacter* EnemyDodge)
 
 void AShooterCharacter::PullTrigger()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Fire"));
 	FHitResult Hit;
 	FVector ShotDirection;
 	FVector End;
@@ -407,13 +410,33 @@ void AShooterCharacter::ShockwaveValid()
 	ShockwaveReady = true;
 }
 
+// AAugmentOrb* AShooterCharacter::SpawnAugmentOrb(UClass* AugmentOrbClassType, AActor* OwningCharacter)
+// {
+// 	FActorSpawnParameters SpawnParams;
+//     SpawnParams.Owner = OwningCharacter; 
+//     AAugmentOrb* AugmentOrb = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClassType, GetActorTransform(), SpawnParams);
+//     return AugmentOrb;
+// }
+
+
 void AShooterCharacter::AugmentCharge()
 {
-	if(ReloadReady)
+	if(ReloadReady && isHoldingOrb && OrbAmmo > 0)
 	{
-		bAugmentCharge = true;
-		CanFire = false;
-		PlayAnimMontage(AugmentAnim);
+		UE_LOG(LogTemp, Warning, TEXT("OrbReady"));
+		isHoldingOrb = true;
+		// AAugmentOrb *AugmentOrb = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbclass, GetActorTransform());
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this; 
+		AAugmentOrb* AugmentOrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClassType, GetActorTransform(), SpawnParams);
+		// AugmentOrbInHand->CurrentOrbState = EOrbstate::Option2;
+		// AugmentOrbInHand->SetVisibility(true); 
+
+		
+		
+		// bAugmentCharge = true;
+		// CanFire = false;
+		// PlayAnimMontage(AugmentAnim);
 	}
 }
 
@@ -425,5 +448,3 @@ void AShooterCharacter::AugmentRelease()
 	fAugmentChargeTime = 0.f;
 	AugmentBullets = 5;
 }
-
-

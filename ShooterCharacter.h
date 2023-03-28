@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "ChargedProjectile.h"
 #include "TimerManager.h"
+#include "AugmentOrb.h"
+#include "OrbState.h"
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequence.h"
 #include "InputCoreTypes.h"
@@ -79,8 +81,12 @@ public:
 	void ResetTimeDilation();
 	
 	void EnemyDodge(AShooterCharacter* EnemyDodge);
-	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
 	bool GetRandomBoolBetween(bool ShouldDodge, bool DontDodge);
+	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
+
+	// AAugmentOrb* SpawnAugmentOrb(UClass* AugmentOrbclass, AActor* OwningCharacter);
+
+	EOrbstate CurrentOrbState;
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
@@ -121,6 +127,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float Health = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
+	int OrbAmmo = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
+	int MaxOrb = 3;
+
+	bool isHoldingOrb = true;
 
 
 	FVector DodgeDirection = FVector(0, 0, 500);
@@ -179,6 +193,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> UltimateProjectileClass;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
+	TSubclassOf<class AAugmentOrb> AugmentOrbClassType;
 
 
 	//Regular Effects	

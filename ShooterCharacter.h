@@ -84,7 +84,6 @@ public:
 	bool GetRandomBoolBetween(bool ShouldDodge, bool DontDodge);
 	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
 
-	// AAugmentOrb* SpawnAugmentOrb(UClass* AugmentOrbclass, AActor* OwningCharacter);
 
 	EOrbstate CurrentOrbState;
 
@@ -196,7 +195,7 @@ private:
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
-	TSubclassOf<class AAugmentOrb> AugmentOrbClassType;
+	TSubclassOf<class AAugmentOrb> AugmentOrbClass;
 
 
 	//Regular Effects	

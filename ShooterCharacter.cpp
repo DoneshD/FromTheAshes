@@ -410,13 +410,6 @@ void AShooterCharacter::ShockwaveValid()
 	ShockwaveReady = true;
 }
 
-// AAugmentOrb* AShooterCharacter::SpawnAugmentOrb(UClass* AugmentOrbClassType, AActor* OwningCharacter)
-// {
-// 	FActorSpawnParameters SpawnParams;
-//     SpawnParams.Owner = OwningCharacter; 
-//     AAugmentOrb* AugmentOrb = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClassType, GetActorTransform(), SpawnParams);
-//     return AugmentOrb;
-// }
 
 
 void AShooterCharacter::AugmentCharge()
@@ -424,13 +417,22 @@ void AShooterCharacter::AugmentCharge()
 	if(ReloadReady && isHoldingOrb && OrbAmmo > 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OrbReady"));
+		UE_LOG(LogTemp, Warning, TEXT("Orb Ammo: %d"), OrbAmmo);
 		isHoldingOrb = true;
-		// AAugmentOrb *AugmentOrb = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbclass, GetActorTransform());
+		AShooterCharacter* OwningCharacter = Cast<AShooterCharacter>(this);
 		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this; 
-		AAugmentOrb* AugmentOrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClassType, GetActorTransform(), SpawnParams);
-		// AugmentOrbInHand->CurrentOrbState = EOrbstate::Option2;
-		// AugmentOrbInHand->SetVisibility(true); 
+		SpawnParams.Owner = OwningCharacter;
+		AAugmentOrb* AugmentOrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClass, GetActorTransform(), SpawnParams);
+		if(AugmentOrbInHand)
+		{
+			AugmentOrbInHand->CurrentOrbState = EOrbstate::Option2;
+			UE_LOG(LogTemp, Warning, TEXT("Pls"));
+			AugmentOrbInHand->SetOwner(OwningCharacter);
+			AugmentOrbInHand->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_ability_socket"));
+			OrbAmmo -= 1;
+			// AugmentOrbInHand->SetVisibility(true); 
+
+		}
 
 		
 		

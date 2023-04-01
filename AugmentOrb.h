@@ -23,6 +23,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USphereComponent* SphereComponent;
 
+	float OverlapRadius = 150;
+	
 	EOrbstate CurrentOrbState;
 
 	// void SetVisibility(bool bVisible);
@@ -37,6 +39,5 @@ private:
 	virtual void Tick(float DeltaTime) override;
 
 
-	float OverlapRadius = 150;
 
 };

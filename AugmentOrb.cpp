@@ -16,7 +16,7 @@ AAugmentOrb::AAugmentOrb()
 	SphereComponent->SetupAttachment(RootComponent);
 
 	SphereComponent->SetSphereRadius(OverlapRadius);
-	SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	// SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 
 	// SphereComponent->AttachToComponent(OrbMesh, FAttachmentTransformRules::KeepRelativeTransform);
 

@@ -3,8 +3,6 @@
 #include "ShooterCharacter.h"
 #include "Projectile.h"
 #include "ChargedProjectile.h"
-#include "AugmentOrb.h"
-#include "OrbState.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -190,6 +188,8 @@ void AShooterCharacter::PullTrigger()
 	FHitResult Hit;
 	FVector ShotDirection;
 	FVector End;
+
+	// check for impact
 
 	bool bSuccess = TraceShot(Hit, ShotDirection, End);
 
@@ -414,28 +414,10 @@ void AShooterCharacter::ShockwaveValid()
 
 void AShooterCharacter::AugmentCharge()
 {
-	if(ReloadReady && isHoldingOrb && OrbAmmo > 0)
+	if(ReloadReady && !isHoldingOrb && OrbAmmo > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OrbReady"));
+		OrbAmmo += 1;
 		UE_LOG(LogTemp, Warning, TEXT("Orb Ammo: %d"), OrbAmmo);
-		isHoldingOrb = true;
-		AShooterCharacter* OwningCharacter = Cast<AShooterCharacter>(this);
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = OwningCharacter;
-		AAugmentOrb* AugmentOrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClass, GetActorTransform(), SpawnParams);
-		if(AugmentOrbInHand)
-		{
-			AugmentOrbInHand->CurrentOrbState = EOrbstate::Option2;
-			UE_LOG(LogTemp, Warning, TEXT("Pls"));
-			AugmentOrbInHand->SetOwner(OwningCharacter);
-			AugmentOrbInHand->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_ability_socket"));
-			OrbAmmo -= 1;
-			// AugmentOrbInHand->SetVisibility(true); 
-
-		}
-
-		
-		
 		// bAugmentCharge = true;
 		// CanFire = false;
 		// PlayAnimMontage(AugmentAnim);

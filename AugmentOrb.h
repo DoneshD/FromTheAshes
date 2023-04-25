@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SphereComponent.h"
-#include "OrbState.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
 #include "AugmentOrb.generated.h"
 
 UCLASS()
@@ -16,7 +15,7 @@ class DYSTOPIANSHOOTER_API AAugmentOrb : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AAugmentOrb();
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* OrbMesh;
 
@@ -24,20 +23,13 @@ public:
 	USphereComponent* SphereComponent;
 
 	float OverlapRadius = 150;
-	
-	EOrbstate CurrentOrbState;
-
-	// void SetVisibility(bool bVisible);
-
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-private:	
+public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-
 
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "AugmentOrb.h"
-#include "OrbState.h"
 
 // Sets default values
 AAugmentOrb::AAugmentOrb()
@@ -10,16 +10,12 @@ AAugmentOrb::AAugmentOrb()
 	PrimaryActorTick.bCanEverTick = true;
 
 	OrbMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Orb Mesh"));
-	RootComponent = OrbMesh;
+	OrbMesh->SetupAttachment(RootComponent);
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Component"));
-	SphereComponent->SetupAttachment(RootComponent);
+	SphereComponent->SetupAttachment(OrbMesh);
 
 	SphereComponent->SetSphereRadius(OverlapRadius);
-	// SphereComponent->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-
-	// SphereComponent->AttachToComponent(OrbMesh, FAttachmentTransformRules::KeepRelativeTransform);
-
 
 }
 
@@ -36,12 +32,4 @@ void AAugmentOrb::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
-// void AAugmentOrb::SetVisibility(bool bVisible)
-// {
-//     SetActorHiddenInGame(!bVisible);
-//     SetActorEnableCollision(bVisible);
-//     SetActorTickEnabled(bVisible);
-// }
-
 

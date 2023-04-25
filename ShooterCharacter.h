@@ -6,10 +6,9 @@
 #include "GameFramework/Character.h"
 #include "ChargedProjectile.h"
 #include "TimerManager.h"
-#include "AugmentOrb.h"
-#include "OrbState.h"
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequence.h"
+#include "AugmentOrb.h"
 #include "InputCoreTypes.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -85,8 +84,6 @@ public:
 	FVector GetRandomVectorBetween(FVector LeftVector, FVector RightVector);
 
 
-	EOrbstate CurrentOrbState;
-
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	UAnimMontage* ChargeFireAnim;
 
@@ -127,17 +124,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
 	float Health = 100;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
-	int OrbAmmo = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stats")
-	int MaxOrb = 3;
-
-	bool isHoldingOrb = true;
-
-
 	FVector DodgeDirection = FVector(0, 0, 500);
 	float DodgeSpeed = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
+	int32 OrbAmmo = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
+	int32 MaxOrbAmmo = 3;
+
+	bool isHoldingOrb = false;
 
 	FTimerHandle FireHandle;
 	FTimerHandle ReloadHandle;
@@ -192,10 +188,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> UltimateProjectileClass;
-
-
-	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
-	TSubclassOf<class AAugmentOrb> AugmentOrbClass;
 
 
 	//Regular Effects	

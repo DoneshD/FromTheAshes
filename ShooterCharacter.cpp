@@ -189,7 +189,7 @@ void AShooterCharacter::PullTrigger()
 	FVector ShotDirection;
 	FVector End;
 
-	// check for impact
+	// check for impact now
 
 	bool bSuccess = TraceShot(Hit, ShotDirection, End);
 

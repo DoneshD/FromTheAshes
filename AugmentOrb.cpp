@@ -10,7 +10,7 @@ AAugmentOrb::AAugmentOrb()
 	PrimaryActorTick.bCanEverTick = true;
 
 	OrbMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Orb Mesh"));
-	OrbMesh->SetupAttachment(RootComponent);
+	RootComponent = OrbMesh;
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Component"));
 	SphereComponent->SetupAttachment(OrbMesh);

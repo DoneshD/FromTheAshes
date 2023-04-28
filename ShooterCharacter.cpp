@@ -414,10 +414,20 @@ void AShooterCharacter::ShockwaveValid()
 
 void AShooterCharacter::AugmentCharge()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Orb Ammo: %d"), OrbAmmo);
 	if(ReloadReady && !isHoldingOrb && OrbAmmo > 0)
 	{
-		OrbAmmo += 1;
-		UE_LOG(LogTemp, Warning, TEXT("Orb Ammo: %d"), OrbAmmo);
+		EOrbState InHand = EOrbState::InHand;
+		AAugmentOrb *OrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClass, GetActorTransform());
+
+		// OrbInHand->SetOrbState(AugmentOrb::InHand);
+
+		if(OrbInHand)
+		{
+			OrbInHand->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_ability_socket"));
+			OrbInHand->SetOwner(this);
+			UE_LOG(LogTemp, Warning, TEXT("Testing"));
+		}
 		// bAugmentCharge = true;
 		// CanFire = false;
 		// PlayAnimMontage(AugmentAnim);

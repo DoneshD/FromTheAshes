@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "OrbState.h"
 #include "Components/SphereComponent.h"
 #include "AugmentOrb.generated.h"
 
@@ -15,6 +16,7 @@ class DYSTOPIANSHOOTER_API AAugmentOrb : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AAugmentOrb();
+	// AAugmentOrb(EOrbState OrbState);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* OrbMesh;
@@ -31,5 +33,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	EOrbState OrbState;
 
 };

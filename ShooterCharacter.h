@@ -9,6 +9,7 @@
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequence.h"
 #include "AugmentOrb.h"
+#include "OrbState.h"
 #include "InputCoreTypes.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -128,7 +129,7 @@ public:
 	float DodgeSpeed = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
-	int32 OrbAmmo = 1;
+	int32 OrbAmmo = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reaper Combat")
 	int32 MaxOrbAmmo = 3;
@@ -189,6 +190,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
 	TSubclassOf<class AProjectile> UltimateProjectileClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Reaper Combat")
+	TSubclassOf<class AAugmentOrb> AugmentOrbClass;
+
+	EOrbState OrbState;
 
 	//Regular Effects	
 	UPROPERTY(EditAnywhere, Category = "Regular Effects")

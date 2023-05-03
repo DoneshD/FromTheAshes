@@ -16,6 +16,7 @@ AAugmentOrb::AAugmentOrb()
 	SphereComponent->SetupAttachment(OrbMesh);
 
 	SphereComponent->SetSphereRadius(OverlapRadius);
+	
 
 }
 

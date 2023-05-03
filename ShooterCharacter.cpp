@@ -417,13 +417,16 @@ void AShooterCharacter::AugmentCharge()
 	UE_LOG(LogTemp, Warning, TEXT("Orb Ammo: %d"), OrbAmmo);
 	if(ReloadReady && !isHoldingOrb && OrbAmmo > 0)
 	{
-		EOrbState InHand = EOrbState::InHand;
-		AAugmentOrb *OrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClass, GetActorTransform());
+		AActor* OwnerActor = GetOwner(); // get the owner actor reference
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = OwnerActor;
 
-		// OrbInHand->SetOrbState(AugmentOrb::InHand);
+		AAugmentOrb* OrbInHand = GetWorld()->SpawnActor<AAugmentOrb>(AugmentOrbClass, GetActorTransform(), SpawnParams);
 
 		if(OrbInHand)
 		{
+			OrbInHand->OrbState = EOrbState::InHand;
+			UE_LOG(LogTemp, Warning, TEXT("Orb state: %d"), static_cast<int32>(OrbInHand->OrbState));
 			OrbInHand->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_ability_socket"));
 			OrbInHand->SetOwner(this);
 			UE_LOG(LogTemp, Warning, TEXT("Testing"));
